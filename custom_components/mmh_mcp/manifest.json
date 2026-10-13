@@ -1,0 +1,30 @@
+{
+  "domain": "mmh_mcp",
+  "name": "MMH MCP",
+  "after_dependencies": [
+    "blueprint",
+    "config",
+    "diagnostics",
+    "energy",
+    "logbook",
+    "recorder",
+    "system_log",
+    "trace"
+  ],
+  "codeowners": [
+    "@mymagichome",
+    "@diegopasa18"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "http",
+    "auth",
+    "api"
+  ],
+  "documentation": "https://github.com/mymagichome/mmh-mcp-homeassistant",
+  "integration_type": "service",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/mymagichome/mmh-mcp-homeassistant/issues",
+  "requirements": [],
+  "version": "1.0.0"
+}
