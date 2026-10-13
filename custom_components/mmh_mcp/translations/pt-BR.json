@@ -1,0 +1,67 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "MMH MCP",
+        "description": "Cria o endpoint MCP em /api/mmh_mcp. Escolha o que as tools podem fazer; o gateway da My Magic Home aplica os papéis de cada pessoa por cima disso.",
+        "data": {
+          "allow_write": "Permitir tools de escrita (chamar serviços, alterar estados, editar registry e integrações)",
+          "allow_destructive": "Permitir tools destrutivas (apagar estados, remover integrações e itens do registry)",
+          "allow_fire_event": "Permitir disparar eventos arbitrários",
+          "rate_limit_per_minute": "Máximo de requisições MCP por minuto por token (0 = sem limite)"
+        }
+      },
+      "gateway": {
+        "title": "Conectar ao gateway MMH",
+        "description": "Cole o código de pareamento gerado no painel do gateway (mcp.mymagichome.com.br/admin) e confira os dados do site. O usuário 'MMH Gateway' e o token são criados automaticamente. Deixe o código em branco para conectar depois, pelas opções da integração.",
+        "data": {
+          "code": "Código de pareamento",
+          "site_slug": "Identificador do site (ex.: business)",
+          "site_name": "Nome do site",
+          "ha_url": "Endereço público deste Home Assistant",
+          "gateway_url": "Endereço do gateway"
+        }
+      }
+    },
+    "error": {
+      "pairing_failed": "Não foi possível conectar: {error}"
+    },
+    "abort": {
+      "single_instance_allowed": "Só é possível ter uma instância do MMH MCP."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "MMH MCP",
+        "menu_options": {
+          "settings": "Permissões das tools",
+          "gateway": "Conectar / reconectar ao gateway MMH"
+        }
+      },
+      "settings": {
+        "title": "Permissões das tools",
+        "data": {
+          "allow_write": "Permitir tools de escrita",
+          "allow_destructive": "Permitir tools destrutivas",
+          "allow_fire_event": "Permitir disparar eventos arbitrários",
+          "rate_limit_per_minute": "Máximo de requisições por minuto por token (0 = sem limite)"
+        }
+      },
+      "gateway": {
+        "title": "Conectar ao gateway MMH",
+        "description": "Cole um código de pareamento gerado no painel do gateway. Para reconectar um site que já existe, gere o código para esse site. Um token novo é criado e o anterior é revogado.",
+        "data": {
+          "code": "Código de pareamento",
+          "site_slug": "Identificador do site (ex.: business)",
+          "site_name": "Nome do site",
+          "ha_url": "Endereço público deste Home Assistant",
+          "gateway_url": "Endereço do gateway"
+        }
+      }
+    },
+    "error": {
+      "pairing_failed": "Não foi possível conectar: {error}"
+    }
+  }
+}

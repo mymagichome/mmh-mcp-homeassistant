@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -25,32 +27,46 @@ from .http import MCPView
 
 _LOGGER = logging.getLogger(__name__)
 
+VIEW_REGISTERED_KEY = f"{DOMAIN}_view_registered"
+
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, _config: ConfigType) -> bool:
-    hass.data.setdefault(DOMAIN, {})
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+def async_register_endpoint(hass: HomeAssistant, options: dict, entry_id: str | None) -> None:
+    """Activate /api/mmh_mcp with ``options``.
+
+    Called by the entry setup and also by the config flow, which must expose the
+    endpoint before the entry exists so the gateway can test it while pairing.
+    The aiohttp view can't be unregistered, so it is registered once per run;
+    without options in hass.data it refuses requests (see http.py).
+    """
     # Import tool modules so they register into the TOOLS registry.
     from . import tools  # noqa: F401  (import side-effects)
 
-    options = {
-        CONF_ALLOW_WRITE: entry.options.get(CONF_ALLOW_WRITE, DEFAULT_ALLOW_WRITE),
-        CONF_ALLOW_DESTRUCTIVE: entry.options.get(
-            CONF_ALLOW_DESTRUCTIVE, DEFAULT_ALLOW_DESTRUCTIVE
-        ),
-        CONF_ALLOW_FIRE_EVENT: entry.options.get(CONF_ALLOW_FIRE_EVENT, DEFAULT_ALLOW_FIRE_EVENT),
-        CONF_RATE_LIMIT_PER_MINUTE: entry.options.get(
+    hass.data[DOMAIN] = {"entry_id": entry_id, "options": options}
+    if not hass.data.get(VIEW_REGISTERED_KEY):
+        hass.http.register_view(MCPView(hass))
+        hass.data[VIEW_REGISTERED_KEY] = True
+        _LOGGER.info("mmh_mcp: MCP endpoint registered at %s", VIEW_URL)
+
+
+def options_from(raw: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        CONF_ALLOW_WRITE: raw.get(CONF_ALLOW_WRITE, DEFAULT_ALLOW_WRITE),
+        CONF_ALLOW_DESTRUCTIVE: raw.get(CONF_ALLOW_DESTRUCTIVE, DEFAULT_ALLOW_DESTRUCTIVE),
+        CONF_ALLOW_FIRE_EVENT: raw.get(CONF_ALLOW_FIRE_EVENT, DEFAULT_ALLOW_FIRE_EVENT),
+        CONF_RATE_LIMIT_PER_MINUTE: raw.get(
             CONF_RATE_LIMIT_PER_MINUTE, DEFAULT_RATE_LIMIT_PER_MINUTE
         ),
     }
-    hass.data[DOMAIN] = {"entry_id": entry.entry_id, "options": options}
 
-    hass.http.register_view(MCPView(hass))
-    _LOGGER.info("mmh_mcp: MCP endpoint registered at %s", VIEW_URL)
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async_register_endpoint(hass, options_from(entry.options), entry.entry_id)
 
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     return True
@@ -65,13 +81,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    hass.data[DOMAIN]["options"] = {
-        CONF_ALLOW_WRITE: entry.options.get(CONF_ALLOW_WRITE, DEFAULT_ALLOW_WRITE),
-        CONF_ALLOW_DESTRUCTIVE: entry.options.get(
-            CONF_ALLOW_DESTRUCTIVE, DEFAULT_ALLOW_DESTRUCTIVE
-        ),
-        CONF_ALLOW_FIRE_EVENT: entry.options.get(CONF_ALLOW_FIRE_EVENT, DEFAULT_ALLOW_FIRE_EVENT),
-        CONF_RATE_LIMIT_PER_MINUTE: entry.options.get(
-            CONF_RATE_LIMIT_PER_MINUTE, DEFAULT_RATE_LIMIT_PER_MINUTE
-        ),
-    }
+    hass.data[DOMAIN]["options"] = options_from(entry.options)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Integration deleted: remove the gateway's HA user and its tokens."""
+    from .gateway_link import async_unpair
+
+    await async_unpair(hass, dict(entry.data))

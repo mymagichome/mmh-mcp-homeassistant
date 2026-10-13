@@ -7,25 +7,26 @@ Servidor [MCP](https://modelcontextprotocol.io) que roda dentro do Home Assistan
 1. No HA, abra **HACS → ⋮ → Repositórios personalizados**.
 2. Cole `https://github.com/mymagichome/mmh-mcp-homeassistant` e escolha a categoria **Integração**.
 3. Procure **MMH MCP** no HACS, clique em **Baixar** e **reinicie o Home Assistant**.
-4. Vá em **Configurações → Dispositivos e serviços → Adicionar integração → MMH MCP**. Os padrões recomendados:
+4. Vá em **Configurações → Dispositivos e serviços → Adicionar integração → MMH MCP**. Nas permissões das tools, os padrões recomendados:
    - escrita: ligada;
    - destrutivo: desligado;
    - disparo de eventos: desligado.
 
 As atualizações aparecem no HACS como qualquer outra integração.
 
-## Preparar o site para o gateway MMH
+## Conectar ao gateway MMH
 
-1. **Crie o usuário do gateway.** Em Configurações → Pessoas, crie **MMH Gateway** (usuário `mmh-gateway`), marcado como **administrador** e **pode fazer login**.
-2. **Gere o token.** Entre com esse usuário numa janela anônima e, em **Perfil → Segurança**, crie um **token de longa duração**.
-3. **Cadastre o site no gateway.** No computador de administração:
-   ```bash
-   npm run admin -- site add <slug> --name "Nome do cliente" \
-     --url https://<cliente>.mymagichome.com.br --access-id <client-id>.access
-   npm run admin -- site test <slug>
-   ```
+1. **Gerar o código.** No painel do gateway (`https://mcp.mymagichome.com.br/admin`), gere um **código de pareamento**. Ele vale uma vez, por 24 horas.
+2. **Colar o código no HA.** Ao adicionar a integração, na etapa **Conectar ao gateway MMH**, cole o código e confira o identificador, o nome e o endereço público do site. Eles vêm preenchidos a partir do `external_url` do HA.
+3. **Pronto.** A integração cria sozinha o usuário **MMH Gateway** (administrador, sem login de interface) e um token de longa duração, e envia tudo ao gateway. O gateway testa a conexão antes de aceitar:
+   - se der certo, o site já está disponível no Claude;
+   - se der errado, o motivo aparece na tela e nada fica cadastrado.
 
-O endpoint `/api/mmh_mcp` de todos os `*.mymagichome.com.br` já é protegido pelo Cloudflare Access (token de serviço `mmh-gateway`). O resto do HA (dashboards, app) não é afetado.
+**Conectar depois ou reconectar:** vá em MMH MCP → **Configurar** → **Conectar / reconectar ao gateway MMH**. Para reconectar um site existente, gere no painel um código específico para ele. Cada novo pareamento cria um token novo e revoga o anterior.
+
+**Remover a integração** apaga também o usuário MMH Gateway e todos os tokens dele.
+
+O endpoint `/api/mmh_mcp` de todos os `*.mymagichome.com.br` é protegido pelo Cloudflare Access (token de serviço do gateway). O resto do HA (dashboards, app) não é afetado.
 
 ## Uso direto, sem o gateway
 
@@ -46,6 +47,8 @@ São cerca de 30 tools `ha_*`, entre elas:
 - backups, logs, traces e templates;
 - HACS e Assist.
 
+As traduções da interface estão em português e inglês.
+
 Cada tool publica em `_meta["br.com.mymagichome/permissions"]` a sua classe (leitura, escrita ou destrutiva) e quais operações exigem admin. É isso que o gateway usa para aplicar os papéis viewer/operator/admin.
 
 As opções da integração (`allow_write`, `allow_destructive`, `allow_fire_event`) continuam valendo como uma segunda trava dentro do HA.
@@ -56,6 +59,8 @@ Fork do [czechbol/hass-mcp](https://github.com/czechbol/hass-mcp) 2.2.2, sob lic
 
 - **Identidade própria:** domínio `mmh_mcp`, nome "MMH MCP" e endpoint `/api/mmh_mcp`. Pode conviver com o hass-mcp original.
 - **Classificação de permissão por tool** em `_meta`, para o gateway.
+- **Pareamento com o gateway MMH** pelo fluxo de configuração (`gateway_link.py`).
+- **Registro único da view:** o recarregamento da integração não duplica a rota. Sem configuração carregada, o endpoint responde 503.
 
 Para incorporar uma versão nova do upstream, copie o código novo, troque `hass_mcp` → `mmh_mcp` e preserve:
 - `registry.py`: `permissions()` e `_meta`;

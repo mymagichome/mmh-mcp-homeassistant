@@ -86,7 +86,7 @@ class MCPView(HomeAssistantView):
         # Fail closed if the config entry has been unloaded. The aiohttp view
         # cannot be unregistered, so it must refuse rather than fall through to
         # permissive option defaults.
-        if DOMAIN not in self._hass.data:
+        if "options" not in self._hass.data.get(DOMAIN, {}):
             return web.Response(status=503, text="mmh_mcp integration is not loaded")
 
         raw = await request.read()

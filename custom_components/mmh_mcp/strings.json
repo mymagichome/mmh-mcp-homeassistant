@@ -3,14 +3,28 @@
     "step": {
       "user": {
         "title": "MMH MCP",
-        "description": "Mounts an MCP endpoint at /api/mmh_mcp using your Home Assistant long-lived access tokens for authentication.",
+        "description": "Mounts an MCP endpoint at /api/mmh_mcp. Choose what the tools may do; the My Magic Home gateway adds per-person roles on top.",
         "data": {
           "allow_write": "Allow write tools (call_service, set_state, registry updates, config-entry mutations)",
           "allow_destructive": "Allow destructive tools (delete state, remove entries, registry delete)",
           "allow_fire_event": "Allow firing arbitrary events on the event bus",
           "rate_limit_per_minute": "Max MCP requests per minute per token (0 = unlimited)"
         }
+      },
+      "gateway": {
+        "title": "Connect to the MMH gateway",
+        "description": "Paste the pairing code generated in the gateway panel (mcp.mymagichome.com.br/admin) and check the site details. A dedicated 'MMH Gateway' user and token are created automatically. Leave the code empty to connect later from the integration options.",
+        "data": {
+          "code": "Pairing code",
+          "site_slug": "Site slug (e.g. business)",
+          "site_name": "Site name",
+          "ha_url": "Public address of this Home Assistant",
+          "gateway_url": "Gateway address"
+        }
       }
+    },
+    "error": {
+      "pairing_failed": "Pairing failed: {error}"
     },
     "abort": {
       "single_instance_allowed": "Only one MMH MCP instance is supported."
@@ -19,14 +33,35 @@
   "options": {
     "step": {
       "init": {
-        "title": "MMH MCP options",
+        "title": "MMH MCP",
+        "menu_options": {
+          "settings": "Tool permissions",
+          "gateway": "Connect / reconnect to the MMH gateway"
+        }
+      },
+      "settings": {
+        "title": "Tool permissions",
         "data": {
           "allow_write": "Allow write tools",
           "allow_destructive": "Allow destructive tools",
           "allow_fire_event": "Allow firing arbitrary events",
           "rate_limit_per_minute": "Max requests per minute per token (0 = unlimited)"
         }
+      },
+      "gateway": {
+        "title": "Connect to the MMH gateway",
+        "description": "Paste a pairing code from the gateway panel. To reconnect an existing site, generate a code for that site. A new token is created and the previous one is revoked.",
+        "data": {
+          "code": "Pairing code",
+          "site_slug": "Site slug (e.g. business)",
+          "site_name": "Site name",
+          "ha_url": "Public address of this Home Assistant",
+          "gateway_url": "Gateway address"
+        }
       }
+    },
+    "error": {
+      "pairing_failed": "Pairing failed: {error}"
     }
   }
 }
