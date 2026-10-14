@@ -16,7 +16,7 @@
         "description": "Cole o código de pareamento gerado no painel do gateway (mcp.mymagichome.com.br/admin) e confira os dados do site. O usuário 'MMH Gateway' e o token são criados automaticamente. Deixe o código em branco para conectar depois, pelas opções da integração.",
         "data": {
           "code": "Código de pareamento",
-          "site_slug": "Identificador do site (ex.: business)",
+          "site_slug": "Identificador do site: minúsculas, sem espaços (ex.: business). Espaços e acentos são convertidos.",
           "site_name": "Nome do site",
           "ha_url": "Endereço público deste Home Assistant",
           "gateway_url": "Endereço do gateway"
@@ -53,7 +53,7 @@
         "description": "Cole um código de pareamento gerado no painel do gateway. Para reconectar um site que já existe, gere o código para esse site. Um token novo é criado e o anterior é revogado.",
         "data": {
           "code": "Código de pareamento",
-          "site_slug": "Identificador do site (ex.: business)",
+          "site_slug": "Identificador do site: minúsculas, sem espaços (ex.: business). Espaços e acentos são convertidos.",
           "site_name": "Nome do site",
           "ha_url": "Endereço público deste Home Assistant",
           "gateway_url": "Endereço do gateway"

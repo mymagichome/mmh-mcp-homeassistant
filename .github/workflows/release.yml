@@ -1,0 +1,26 @@
+name: Release
+
+# Ao enviar uma tag vX.Y.Z, cria a release no GitHub (é ela que o HACS oferece
+# como atualização). Confere se a tag bate com a versão do manifest.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Conferir versão
+        run: |
+          manifest=$(python3 -c "import json;print(json.load(open('custom_components/mmh_mcp/manifest.json'))['version'])")
+          if [ "v$manifest" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME não bate com a versão do manifest ($manifest)"; exit 1
+          fi
+      - name: Criar release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes --verify-tag

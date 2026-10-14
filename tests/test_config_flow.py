@@ -232,3 +232,27 @@ async def test_endpoint_is_live_while_gateway_tests_it(
     assert seen["options"] == OPTIONS  # endpoint enabled with the step-1 options
     assert result["errors"] == {"base": "pairing_failed"}
     assert DOMAIN not in hass.data  # closed again after the failure
+
+
+async def test_slug_is_normalized_before_sending(
+    hass: HomeAssistant, site_config: None, aioclient_mock: AiohttpClientMocker
+) -> None:
+    aioclient_mock.post(f"{GATEWAY}/enroll", json={"ok": True, "site": {"slug": "diego-pasa"}})
+    result = await _start(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _pair_input(site_slug="Diego Pasã")
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert aioclient_mock.mock_calls[0][2]["slug"] == "diego-pasa"
+
+
+async def test_empty_slug_is_rejected_without_creating_anything(
+    hass: HomeAssistant, site_config: None
+) -> None:
+    result = await _start(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _pair_input(site_slug="!!")
+    )
+    assert result["errors"] == {"base": "pairing_failed"}
+    assert "identificador" in result["description_placeholders"]["error"]
+    assert await _gateway_users(hass) == []

@@ -46,6 +46,13 @@ class PairingError(Exception):
     """Pairing failed; the message is shown to the person in the flow."""
 
 
+def normalize_slug(value: str) -> str:
+    """'Diego Pasa' -> 'diego-pasa', 'João' -> 'joao': what the gateway accepts."""
+    slug = slugify(value or "", separator="-")
+    # HA's slugify returns "unknown" when nothing usable is left.
+    return "" if slug == "unknown" and "unknown" not in (value or "").lower() else slug
+
+
 def suggest_site(hass: HomeAssistant) -> dict[str, str]:
     """Defaults for the pairing form, from the HA's own configuration."""
     external = hass.config.external_url or ""
@@ -54,7 +61,7 @@ def suggest_site(hass: HomeAssistant) -> dict[str, str]:
     if host.endswith(MMH_DOMAIN_SUFFIX):
         slug = host[: -len(MMH_DOMAIN_SUFFIX)].rstrip(".")
     if not slug:
-        slug = slugify(hass.config.location_name or "", separator="-")
+        slug = normalize_slug(hass.config.location_name or "")
     ha_url = external.rstrip("/") if external.startswith("https://") else ""
     if not ha_url and slug:
         ha_url = f"https://{slug}.{MMH_DOMAIN_SUFFIX.lstrip('.')}"
@@ -92,6 +99,11 @@ async def async_pair(
     if parsed.scheme != "https" and not local_dev:
         raise PairingError("o endereço do gateway precisa começar com https://")
 
+    if len(normalize_slug(slug)) < 2:
+        raise PairingError(
+            "informe um identificador com pelo menos 2 letras ou números (ex.: business)"
+        )
+
     user, created = await _async_gateway_user(hass, previous.get(CONF_USER_ID))
     refresh_token = await hass.auth.async_create_refresh_token(
         user,
@@ -105,7 +117,7 @@ async def async_pair(
 
     payload = {
         "code": code.strip(),
-        "slug": slug.strip().lower(),
+        "slug": normalize_slug(slug),
         "name": name.strip(),
         "ha_url": ha_url.strip().rstrip("/"),
         "ha_token": access_token,

@@ -21,7 +21,7 @@ DEFAULT_RATE_LIMIT_PER_MINUTE: Final = 600
 
 PROTOCOL_VERSION: Final = "2025-06-18"
 SERVER_NAME: Final = "mmh_mcp"
-SERVER_VERSION: Final = "1.1.0"
+SERVER_VERSION: Final = "1.1.1"
 # Upstream czechbol/hass-mcp version this fork is based on.
 UPSTREAM_VERSION: Final = "2.2.2"
 

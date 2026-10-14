@@ -69,8 +69,8 @@ Para incorporar uma versão nova do upstream, copie o código novo, troque `hass
 ## Publicar uma versão nova
 
 1. Atualize `version` em `custom_components/mmh_mcp/manifest.json` e `SERVER_VERSION` em `const.py`.
-2. Faça o commit e crie a tag (`git tag v1.0.1 && git push --tags`).
-3. No GitHub, abra **Releases → Draft a new release**, escolha a tag e publique. O HACS mostra a atualização nos HA.
+2. Faça o commit e envie com a tag (`git tag v1.2.0 && git push origin main v1.2.0`). No repositório MyMagicHome, o `mmh-mcp/scripts/publicar-integracao.sh` faz isso.
+3. O GitHub Actions cria a release sozinho (workflow *Release*), e o HACS mostra a atualização nos HA.
 
 ## Desenvolvimento
 

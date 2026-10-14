@@ -16,7 +16,7 @@
         "description": "Paste the pairing code generated in the gateway panel (mcp.mymagichome.com.br/admin) and check the site details. A dedicated 'MMH Gateway' user and token are created automatically. Leave the code empty to connect later from the integration options.",
         "data": {
           "code": "Pairing code",
-          "site_slug": "Site slug (e.g. business)",
+          "site_slug": "Site slug: lowercase, no spaces (e.g. business). Spaces and accents are converted.",
           "site_name": "Site name",
           "ha_url": "Public address of this Home Assistant",
           "gateway_url": "Gateway address"
@@ -53,7 +53,7 @@
         "description": "Paste a pairing code from the gateway panel. To reconnect an existing site, generate a code for that site. A new token is created and the previous one is revoked.",
         "data": {
           "code": "Pairing code",
-          "site_slug": "Site slug (e.g. business)",
+          "site_slug": "Site slug: lowercase, no spaces (e.g. business). Spaces and accents are converted.",
           "site_name": "Site name",
           "ha_url": "Public address of this Home Assistant",
           "gateway_url": "Gateway address"
