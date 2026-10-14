@@ -2,9 +2,12 @@ name: Release
 
 # Ao enviar uma tag vX.Y.Z, cria a release no GitHub (é ela que o HACS oferece
 # como atualização). Confere se a tag bate com a versão do manifest.
+# Também pode ser rodado à mão (Actions → Release → Run workflow): aí cria a
+# tag v<versão do manifest> no commit da main e a release junto.
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -15,12 +18,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Conferir versão
+        id: versao
         run: |
           manifest=$(python3 -c "import json;print(json.load(open('custom_components/mmh_mcp/manifest.json'))['version'])")
-          if [ "v$manifest" != "$GITHUB_REF_NAME" ]; then
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "v$manifest" != "$GITHUB_REF_NAME" ]; then
             echo "Tag $GITHUB_REF_NAME não bate com a versão do manifest ($manifest)"; exit 1
           fi
+          echo "tag=v$manifest" >> "$GITHUB_OUTPUT"
       - name: Criar release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes --verify-tag
+          TAG: ${{ steps.versao.outputs.tag }}
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            gh release create "$TAG" --title "$TAG" --generate-notes --verify-tag
+          elif gh release view "$TAG" >/dev/null 2>&1; then
+            echo "A release $TAG já existe. Atualize a versão no manifest antes de publicar."; exit 1
+          else
+            gh release create "$TAG" --title "$TAG" --generate-notes --target "$GITHUB_SHA"
+          fi

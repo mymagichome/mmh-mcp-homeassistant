@@ -72,6 +72,8 @@ Para incorporar uma versão nova do upstream, copie o código novo, troque `hass
 2. Faça o commit e envie com a tag (`git tag v1.2.0 && git push origin main v1.2.0`). No repositório MyMagicHome, o `mmh-mcp/scripts/publicar-integracao.sh` faz isso.
 3. O GitHub Actions cria a release sozinho (workflow *Release*), e o HACS mostra a atualização nos HA.
 
+Sem como enviar a tag (numa sessão do Claude, por exemplo), envie só o commit para a `main` e rode o workflow *Release* à mão: ele cria a tag e a release com a versão do manifest.
+
 ## Desenvolvimento
 
 ```bash
