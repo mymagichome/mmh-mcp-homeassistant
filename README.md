@@ -1,3 +1,5 @@
+<p align="center"><img src="https://raw.githubusercontent.com/mymagichome/mmh-mcp-homeassistant/main/logo.png" alt="My Magic Home" width="120"></p>
+
 # MMH MCP — integração para Home Assistant
 
 Servidor [MCP](https://modelcontextprotocol.io) que roda dentro do Home Assistant, em `POST /api/mmh_mcp`. É o lado "casa" da plataforma MCP da **My Magic Home**: o gateway da MMH (Cloudflare) chama esta integração em cada site para que o Claude consulte e opere o HA, com login, permissões por pessoa e auditoria.
