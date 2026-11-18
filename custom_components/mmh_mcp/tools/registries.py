@@ -51,6 +51,25 @@ def _entity_to_dict(e: er.RegistryEntry) -> dict[str, Any]:
     }
 
 
+def todos_dispositivos(reg) -> list:
+    """Todos os DeviceEntry do registro, em qualquer versão do HA.
+
+    HA recente: iterar `reg.devices` já dá os DeviceEntry (usar como dicionário está obsoleto
+    e para de funcionar no 2027.9). HA antigo: iterar dá os ids, então usa `.values()`.
+    """
+    itens = list(reg.devices)
+    if itens and isinstance(itens[0], str):
+        return list(reg.devices.values())
+    return itens
+
+
+def _entradas_do_dispositivo(d) -> list:
+    """Integrações do dispositivo: `config_entry_id` (HA recente) ou `config_entries` (antigo)."""
+    if hasattr(d, "config_entry_id"):
+        return [d.config_entry_id] if d.config_entry_id else []
+    return sorted(getattr(d, "config_entries", None) or [])
+
+
 def _device_to_dict(d) -> dict[str, Any]:
     return {
         "id": d.id,
@@ -61,7 +80,7 @@ def _device_to_dict(d) -> dict[str, Any]:
         "sw_version": d.sw_version,
         "hw_version": d.hw_version,
         "area_id": d.area_id,
-        "config_entries": sorted(d.config_entries or []),
+        "config_entries": _entradas_do_dispositivo(d),
         "connections": [list(c) for c in (d.connections or [])],
         "identifiers": [list(i) for i in (d.identifiers or [])],
         "labels": sorted(d.labels or []),
@@ -213,7 +232,7 @@ async def _entity_ops(hass, op, id, data, limit, offset):
 async def _device_ops(hass, op, id, data, limit, offset):
     reg = dr.async_get(hass)
     if op == "list":
-        items = [_device_to_dict(d) for d in reg.devices.values()]
+        items = [_device_to_dict(d) for d in todos_dispositivos(reg)]
         return paginate(items, limit, offset)
     if op == "get":
         if not id:

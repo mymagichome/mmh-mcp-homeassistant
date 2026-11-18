@@ -21,6 +21,7 @@ from homeassistant.helpers import (
 
 from ..identity import can_read_entity
 from ..registry import schema, tool
+from .registries import todos_dispositivos
 
 _KINDS = ("entity", "device", "area", "label")
 
@@ -101,7 +102,7 @@ async def ha_search(
     if "device" in wanted:
         reg = dr.async_get(hass)
         results = []
-        for d in reg.devices.values():
+        for d in todos_dispositivos(reg):
             name = d.name_by_user or d.name or ""
             s = score(name)
             if s >= min_score:
