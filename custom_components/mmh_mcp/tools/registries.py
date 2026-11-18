@@ -189,6 +189,39 @@ async def ha_registry(
     return await handlers[kind](hass, op, id, data or {}, limit, offset)
 
 
+def _normalizar_entidade(data: dict[str, Any]) -> dict[str, Any]:
+    """Converte o JSON da tool nos tipos que o registro de entidades exige.
+
+    `hidden_by` / `disabled_by` chegam como texto ("user") e o HA espera o enum;
+    `labels` / `aliases` chegam como lista e o HA guarda como conjunto.
+    """
+    d = dict(data)
+    try:
+        if d.get("hidden_by") is not None:
+            d["hidden_by"] = er.RegistryEntryHider(d["hidden_by"])
+        if d.get("disabled_by") is not None:
+            d["disabled_by"] = er.RegistryEntryDisabler(d["disabled_by"])
+    except ValueError as e:
+        raise ToolError(f"valor inválido: {e} (use 'user' ou null)") from e
+    for chave in ("labels", "aliases"):
+        if isinstance(d.get(chave), list):
+            d[chave] = set(d[chave])
+    return d
+
+
+def _normalizar_dispositivo(data: dict[str, Any]) -> dict[str, Any]:
+    """Mesma conversão para o registro de dispositivos (`disabled_by`, `labels`)."""
+    d = dict(data)
+    try:
+        if d.get("disabled_by") is not None:
+            d["disabled_by"] = dr.DeviceEntryDisabler(d["disabled_by"])
+    except ValueError as e:
+        raise ToolError(f"valor inválido: {e} (use 'user' ou null)") from e
+    if isinstance(d.get("labels"), list):
+        d["labels"] = set(d["labels"])
+    return d
+
+
 async def _entity_ops(hass, op, id, data, limit, offset):
     reg = er.async_get(hass)
     if op == "list":
@@ -212,7 +245,7 @@ async def _entity_ops(hass, op, id, data, limit, offset):
         if not id:
             raise ToolError("entity update requires id (entity_id)")
         try:
-            updated = reg.async_update_entity(id, **data)
+            updated = reg.async_update_entity(id, **_normalizar_entidade(data))
         except KeyError as e:
             raise ToolError(f"entity '{id}' not found") from e
         return _entity_to_dict(updated)
@@ -244,7 +277,7 @@ async def _device_ops(hass, op, id, data, limit, offset):
     if op == "update":
         if not id:
             raise ToolError("device update requires id")
-        d = reg.async_update_device(id, **data)
+        d = reg.async_update_device(id, **_normalizar_dispositivo(data))
         if d is None:
             raise ToolError(f"device '{id}' not found")
         return _device_to_dict(d)
